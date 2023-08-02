@@ -139,10 +139,16 @@ if st.button('开始识别'):
                         # 开始识别
                         audio_file = open(download, "rb")
                         data = openai.Audio.transcribe("whisper-1", audio_file)
-                        st.write("单期：%s 识别结果：" % resource["title"])
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.write("单期：%s 识别结果：" % resource["title"])
+                        with col2:
+                            if st.session_state['type_response'] == '更新到数据库':
+                                if st.button('更新到数据库', type='primary'):
+                                    st.write('开发中...')
+                                else:
+                                    st.write('点击按钮将文本更新回源数据')
                         st.write(data.text)
-                        if st.session_state['type_response'] == '更新到数据库':
-                            st.write('更新到数据库功能只能在公司内网使用，暂时无法提供服务')
                     else:
                         st.write('下载失败：%s' % resource["title"])
     elif st.session_state['type_trans'] == '按单期转换':
@@ -161,10 +167,17 @@ if st.button('开始识别'):
                     # 开始识别
                     audio_file = open(download, "rb")
                     data = openai.Audio.transcribe("whisper-1", audio_file)
-                    st.write("单期：%s 识别结果：" % title)
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.write("单期：%s 识别结果：" % title)
+                    with col2:
+                        if st.session_state['type_response'] == '更新到数据库':
+                            if st.button('更新到数据库', type='primary'):
+                                st.write('开发中...')
+                            else:
+                                st.write('点击按钮将文本更新回源数据')
+
                     st.write(data.text)
-                    if st.session_state['type_response'] == '更新到数据库':
-                        st.write('更新到数据库功能只能在公司内网使用，暂时无法提供服务')
                 else:
                     st.write('下载失败：%s' % title)
 
