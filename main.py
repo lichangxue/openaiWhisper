@@ -82,6 +82,11 @@ with st.sidebar:
         st.session_state['type_response'] = type_response
 
 if st.button('开始识别'):
+    if openai.api_key == '':
+        # 从配置文件获取
+        config = json.load(open('config.json','r'))
+        openai.api_key = config['openai_apikey']
+
     if st.session_state['type_trans'] == '上传音频':
         if uploaded_files is None:
             st.error('请上传文件', icon="🚨")
@@ -109,11 +114,10 @@ if st.button('开始识别'):
                 count = int(res['data']['count'])
                 for val_ in list:
                     url = urljoin(val_["audiolist"][0]["filePath"], urlparse(val_["audiolist"][0]["filePath"]).path)
-                    resources.append({"pid": val_["programId"], "rid": val_["id"], "title": val_["title"],
-                                     "filepath": url})
+                    # resources.append({"pid": val_["programId"], "rid": val_["id"], "title": val_["title"],"filepath": url})
                 allPage = math.ceil(count/20)
                 st.write(allPage)
-                for page in [2,allPage]:
+                for page in [1,allPage]:
                     _url = 'https://d.fm.renbenai.com/fm/read/fmd/android/600/getProgramAudioList.html?pid=%s&pagenum=%d' % (
                         st.session_state['number_pid'], page)
                     _res = requests.get(_url)
@@ -123,10 +127,12 @@ if st.button('开始识别'):
                         for __val in _list:
                             _url = urljoin(__val["audiolist"][0]["filePath"],
                                           urlparse(__val["audiolist"][0]["filePath"]).path)
-                            resources.append({"pid": __val["programId"], "rid": __val["id"], "title": __val["title"],
-                                     "filepath": _url})
+                            dict = {"pid": __val["programId"], "rid": __val["id"], "title": __val["title"],"filepath": _url}
+                            if dict not in resources:
+                                resources.append(dict)
                 # 先下载 再识别
                 # st.write(resources)
+
                 for resource in resources:
                     download = file_downloand(resource["filepath"])
                     if download != False:
@@ -139,6 +145,30 @@ if st.button('开始识别'):
                             st.write('更新到数据库功能只能在公司内网使用，暂时无法提供服务')
                     else:
                         st.write('下载失败：%s' % resource["title"])
+    elif st.session_state['type_trans'] == '按单期转换':
+        if st.session_state['number_rid'] == '':
+            st.error('请输入单期ID', icon="🚨")
+        else:
+            url = 'https://d.fm.renbenai.com/fm/read/fmd/android/getResourceDetails_633.html?rid=%s' % st.session_state['number_rid']
+            res = requests.get(url)
+            res = json.loads(res.text)
+            if int(res['code']) == 0:
+                data = res['data']
+                title = data['title']
+                _url = urljoin(data["audiolist"][0]["filePath"],urlparse(data["audiolist"][0]["filePath"]).path)
+                download = file_downloand(_url)
+                if download != False:
+                    # 开始识别
+                    audio_file = open(download, "rb")
+                    data = openai.Audio.transcribe("whisper-1", audio_file)
+                    st.write("单期：%s 识别结果：" % title)
+                    st.write(data.text)
+                    if st.session_state['type_response'] == '更新到数据库':
+                        st.write('更新到数据库功能只能在公司内网使用，暂时无法提供服务')
+                else:
+                    st.write('下载失败：%s' % title)
+
+
 
 
 
