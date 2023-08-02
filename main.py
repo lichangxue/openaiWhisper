@@ -52,7 +52,7 @@ if 'transcribe' not in st.session_state:
 if 'uploaded_files' not in st.session_state:
     st.session_state['uploaded_files'] = ''
 
-openai.api_key = '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'
+openai.api_key = ''
 uploaded_files=None
 with st.sidebar:
     type_trans = st.radio(
